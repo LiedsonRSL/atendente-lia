@@ -1,6 +1,10 @@
+const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const lia = require('./lia.js');
+
+const app = express();
+const PORT = process.env.PORT || 10000;
 
 // Guarda onde cada cliente parou na conversa
 const estados = {};
@@ -12,19 +16,25 @@ function pegarEstado(numero) {
   return estados[numero];
 }
 
+let ultimoQR = '';
+
 const client = new Client({
   authStrategy: new LocalAuth(),
-  puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+  puppeteer: {
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+  }
 });
 
-// Mostra o QR Code pra você escanear
+// Guarda o QR pra mostrar no site
 client.on('qr', (qr) => {
-  console.log('ESCANEIA ESSE QR CODE NO SEU WHATSAPP BUSINESS:');
-  qrcode.generate(qr, { small: true });
+  ultimoQR = qr;
+  console.log('QR GERADO, abra /qr para escanear');
 });
 
 client.on('ready', () => {
   console.log('Lia conectada no WhatsApp Business! Prontinha!');
+  ultimoQR = '';
 });
 
 client.on('message', async (msg) => {
@@ -48,3 +58,20 @@ client.on('message', async (msg) => {
 });
 
 client.initialize();
+
+// --- PARTE DO SITE ---
+app.get('/', (req, res) => {
+  res.send('Lia online! Acesse /qr para conectar');
+});
+
+app.get('/qr', async (req, res) => {
+  if (!ultimoQR) {
+    return res.send('<h1>Aguarde... Lia ja conectada ou gerando QR. Atualize em 10 segundos.</h1>');
+  }
+  const imagem = await qrcode.toDataURL(ultimoQR);
+  res.send(`<h1>Escaneie com o WhatsApp Business</h1><img src="${imagem}" width="350"><br><p>Atualize a pagina se o QR expirar</p>`);
+});
+
+app.listen(PORT, () => {
+  console.log(`Atendente Lia rodando na porta ${PORT}`);
+});
