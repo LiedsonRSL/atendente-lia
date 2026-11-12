@@ -1,0 +1,13 @@
+{
+  "name": "atendente-lia",
+  "version": "1.0.0",
+  "description": "Atendente Lia - Artesanatos",
+  "main": "whatsapp.js",
+  "scripts": {
+    "start": "node whatsapp.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.26.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
