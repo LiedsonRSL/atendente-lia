@@ -2,11 +2,26 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const lia = require('./lia.js');
 const path = require('path');
+const fs = require('fs');
+
+// Acha o Chrome onde o Render instalou
+function acharChrome() {
+  const caminhos = [
+    '/opt/render/project/src/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux64/chrome',
+    '/opt/render/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux64/chrome',
+    process.env.PUPPETEER_EXECUTABLE_PATH
+  ];
+  for (const c of caminhos) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return undefined;
+}
 
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
+    executablePath: acharChrome(),
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -67,15 +82,15 @@ client.on('message', async (msg) => {
   if (estado.etapa === 'perguntando_cor' && !estado.jaMandouCores) {
     estado.jaMandouCores = true;
     try {
-      let arquivo = 'cores-lisa.jpg';
+      let arquivo = 'cores-lisa.jpeg';
       let legenda = 'Olha essa cartela linda! ❤️ São 22 cores de Corda de Algodão Lisa 6mm. Me fala o nome da cor que você mais gostou!';
 
       if (estado.fio && estado.fio.toLowerCase().includes('especial')) {
-        arquivo = 'cores-especiais.jpg';
+        arquivo = 'cores-especiais.jpeg';
         legenda = 'Olha essa cartela especial! ✨ São 12 cores especiais - com Ouro, Pontilhadas e Mescladas. Me fala o nome da que você amou!';
       }
       if (estado.fio && (estado.fio.toLowerCase().includes('nautica') || estado.fio.toLowerCase().includes('náutica'))) {
-        arquivo = 'cores-nauticas.jpg';
+        arquivo = 'cores-nauticas.jpeg';
         legenda = 'Olha essa cartela náutica! São 4 cores super resistentes. Me fala qual você quer: Preto, Areia, Rami ou Caramelo?';
       }
 
